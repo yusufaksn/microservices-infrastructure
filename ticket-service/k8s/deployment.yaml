@@ -29,3 +29,10 @@ spec:
           env:
             - name: SERVER_PORT
               value: "8502"
+          resources:
+            requests:
+              cpu: "250m"      # 0.25 Core - Gerçekçi başlangıç değeri
+              memory: "256Mi"
+            limits:
+              cpu: "500m"      # En fazla 0.5 Core
+              memory: "512Mi"    

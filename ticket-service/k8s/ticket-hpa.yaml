@@ -1,0 +1,19 @@
+# ticket-hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ticket-service-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ticket-service
+  minReplicas: 1 # Sistem boştayken 1 poda düşmesini tetikleyecek ayar
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60 # CPU kullanımı %60'ı geçmedikçe yeni pod açmaz
