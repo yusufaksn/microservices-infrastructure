@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notification-service-config
+data:
+  SERVER_PORT: "8503"
+  SPRING_APPLICATION_NAME: notification-service
+
+  SPRING_RABBITMQ_HOST: host.minikube.internal
+  SPRING_RABBITMQ_PORT: "5672"
+  SPRING_RABBITMQ_USERNAME: admin
+
+
+  MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://host.minikube.internal:9411/api/v2/spans
+
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://host.minikube.internal:8080/realms/master
