@@ -123,7 +123,27 @@ Repeat this step for each service.
 
 ---
 
-## 4. Configure Keycloak
+## 4. Configure API Gateway
+
+The API Gateway routes requests to backend services using values defined in its Kubernetes ConfigMap.
+
+Before deploying the Gateway, verify that the configured service endpoints match your Kubernetes environment. If you add new microservices, update the Gateway ConfigMap accordingly.
+
+Forward the Gateway service to your local machine:
+
+```bash
+kubectl port-forward service/gateway-service 8504:8504
+```
+
+The API Gateway will be available at:
+
+```text
+http://localhost:8504
+```
+
+---
+
+## 5. Configure Keycloak
 
 After all services are running, configure Keycloak before testing the application.
 
@@ -136,7 +156,7 @@ After all services are running, configure Keycloak before testing the applicatio
 
 ---
 
-## 5. Verify the Deployment
+## 6. Verify the Deployment
 
 Check that all resources are running correctly:
 
