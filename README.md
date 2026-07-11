@@ -5,9 +5,11 @@ A sample microservices infrastructure built with **Spring Boot** and **Spring Cl
 ## Features
 
 - Reactive API Gateway (Spring Cloud Gateway)
+- Retry and Circuit Breaker support
 - JWT Authentication and Authorization with Keycloak
 - Token Relay between microservices
 - Asynchronous messaging with RabbitMQ
+- Distributed tracing with Zipkin
 - Relational database integration
 - Kubernetes deployments
 - Horizontal Pod Autoscaler (HPA)
@@ -21,6 +23,7 @@ The project currently consists of:
 - Notification Service
 - Keycloak
 - RabbitMQ
+- Zipkin
 - Relational databases
 
 The primary goal of this project is to demonstrate how modern microservices can be deployed, secured, and scaled using Kubernetes while following common cloud-native practices.
@@ -117,3 +120,46 @@ kubectl apply -f k8s/
 ```
 
 Repeat this step for each service.
+
+---
+
+## 4. Configure Keycloak
+
+After all services are running, configure Keycloak before testing the application.
+
+- Create or import a realm.
+- Create a client for the API Gateway.
+- Create at least one user.
+- Assign the required roles.
+- Obtain an access token.
+- Include the token in the `Authorization: Bearer <token>` header when calling protected endpoints.
+
+---
+
+## 5. Verify the Deployment
+
+Check that all resources are running correctly:
+
+```bash
+kubectl get pods
+```
+
+```bash
+kubectl get services
+```
+
+```bash
+kubectl get hpa
+```
+
+```bash
+kubectl top nodes
+```
+
+If all Pods are in the `Running` state and the HPA is available, the application is ready to use.
+
+Distributed traces can be viewed in the Zipkin UI:
+
+```text
+http://localhost:9411
+```
