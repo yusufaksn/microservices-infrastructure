@@ -125,9 +125,9 @@ Repeat this step for each service.
 
 ## 4. Configure API Gateway
 
-The API Gateway routes requests to backend services using values defined in its Kubernetes ConfigMap.
+The API Gateway uses a Kubernetes ConfigMap for externalized configuration, including the backend service routes.
 
-Before deploying the Gateway, verify that the configured service endpoints match your Kubernetes environment. If you add new microservices, update the Gateway ConfigMap accordingly.
+Before deploying or updating the Gateway, verify that the configured service endpoints match your Kubernetes environment. If you add a new microservice, update the Gateway ConfigMap to include its route.
 
 Forward the Gateway service to your local machine:
 
@@ -140,8 +140,6 @@ The API Gateway will be available at:
 ```text
 http://localhost:8504
 ```
-
----
 
 ## 5. Configure Keycloak
 
