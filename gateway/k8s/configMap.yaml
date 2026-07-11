@@ -10,20 +10,23 @@ data:
 
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_DISCOVERY_LOCATOR_ENABLED: "false"
 
-  # --- ROUTE TANIMLAMASI ---
+  # =========================================================================
+  # ROUTE TANIMLAMASI
+  # =========================================================================
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_ID: "ticket-service-route"
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_URI: "http://ticket-service:8502"
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_PREDICATES_0: "Path=/api/ticket/**"
 
-  # FILTERS_0: TokenRelay
-  SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_FILTERS_0: "TokenRelay"
+  # FILTERS_0: TokenRelay (İsmi diğer filtreler gibi açıkça NAME hiyerarşisine alındı)
+  # Böylece Spring, CircuitBreaker ve Retry ile aynı hizada context'i koruyarak token'ı iletecek.
+  SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_FILTERS_0_NAME: "TokenRelay"
 
-  # FILTERS_1: CircuitBreaker (Dış katmanda durmalı ki Retry'lar bittiğinde devreye girsin)
+  # FILTERS_1: CircuitBreaker
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_FILTERS_1_NAME: "CircuitBreaker"
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_FILTERS_1_ARGS_NAME: "ticketCircuitBreaker"
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_FILTERS_1_ARGS_FALLBACKURI: "forward:/fallback"
 
-  # FILTERS_2: Retry (İç katmanda, istek doğrudan buraya çarpar ve başarısızlıkta tekrar dener)
+  # FILTERS_2: Retry
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_FILTERS_2_NAME: "Retry"
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_FILTERS_2_ARGS_RETRIES: "3"
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_FILTERS_2_ARGS_STATUSES: "INTERNAL_SERVER_ERROR,BAD_GATEWAY,SERVICE_UNAVAILABLE"
@@ -32,14 +35,17 @@ data:
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_FILTERS_2_ARGS_BACKOFF_MAXBACKOFF: "500ms"
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_FILTERS_2_ARGS_BACKOFF_FACTOR: "2"
 
-  # --- RESILIENCE4J CONFIGURATION ---
-  # NOT: Instance ismini k8s env ortamında tamamen küçük harfe bind etme riskine karşı küçük harfle eşledim.
+  # =========================================================================
+  # RESILIENCE4J CONFIGURATION
+  # =========================================================================
   RESILIENCE4J_CIRCUITBREAKER_INSTANCES_TICKETCIRCUITBREAKER_SLIDING_WINDOW_SIZE: "10"
   RESILIENCE4J_CIRCUITBREAKER_INSTANCES_TICKETCIRCUITBREAKER_FAILURE_RATE_THRESHOLD: "50"
   RESILIENCE4J_CIRCUITBREAKER_INSTANCES_TICKETCIRCUITBREAKER_WAIT_DURATION_IN_OPEN_STATE: "20s"
   RESILIENCE4J_CIRCUITBREAKER_INSTANCES_TICKETCIRCUITBREAKER_PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE: "3"
 
-  # --- TRACING & ACTUATOR ---
+  # =========================================================================
+  # TRACING & ACTUATOR CONFIGURATION
+  # =========================================================================
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
   MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://host.minikube.internal:9411/api/v2/spans"
 
@@ -50,4 +56,4 @@ data:
 
   MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
   MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,gateway,tracing"
-  MANAGEMENT_ENDPOINT_GATEWAY_ENABLED: "true"
+  MANAGEMENT_ENDPOINT_GATEWAY_ACCESS: "unrestricted"

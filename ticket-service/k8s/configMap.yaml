@@ -18,4 +18,5 @@ data:
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
   MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://host.minikube.internal:9411/api/v2/spans
 
-  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://host.minikube.internal:8080/realms/master
+
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "http://keycloak:8080/realms/master"
