@@ -4,27 +4,28 @@ A sample microservices infrastructure built with **Spring Boot** and **Spring Cl
 
 ## Features
 
-* Reactive API Gateway (Spring Cloud Gateway)
-* JWT Authentication and Authorization with Keycloak
-* Token Relay between microservices
-* Asynchronous messaging with RabbitMQ
-* Relational database integration
-* Kubernetes deployments
-* Horizontal Pod Autoscaler (HPA)
-* ConfigMaps and Secrets for externalized configuration
-* Docker containerization
+- Reactive API Gateway (Spring Cloud Gateway)
+- JWT Authentication and Authorization with Keycloak
+- Token Relay between microservices
+- Asynchronous messaging with RabbitMQ
+- Relational database integration
+- Kubernetes deployments
+- Horizontal Pod Autoscaler (HPA)
+- ConfigMaps and Secrets for externalized configuration
+- Docker containerization
 
 The project currently consists of:
 
-* API Gateway
-* Ticket Service
-* Notification Service
-* Keycloak
-* RabbitMQ
-* Relational databases
+- API Gateway
+- Ticket Service
+- Notification Service
+- Keycloak
+- RabbitMQ
+- Relational databases
 
 The primary goal of this project is to demonstrate how modern microservices can be deployed, secured, and scaled using Kubernetes while following common cloud-native practices.
 
+---
 
 ## 1. Kubernetes Cluster Setup
 
@@ -34,9 +35,9 @@ For local development and testing, **Minikube** is recommended. It provides a li
 
 Install the following tools:
 
-* Docker Desktop
-* Minikube
-* kubectl
+- Docker Desktop
+- Minikube
+- kubectl
 
 ### Start Minikube Cluster
 
@@ -57,6 +58,22 @@ NAME       STATUS   ROLES           AGE
 minikube   Ready    control-plane   1m
 ```
 
+### Enable Metrics Server
+
+Horizontal Pod Autoscaler (HPA) requires the Kubernetes Metrics Server.
+
+Enable it in Minikube:
+
+```bash
+minikube addons enable metrics-server
+```
+
+Verify that it is running:
+
+```bash
+kubectl top nodes
+```
+
 ### Stop / Delete Cluster
 
 Stop:
@@ -71,26 +88,32 @@ Delete:
 minikube delete
 ```
 
+---
 
-2. Start Required Services
+## 2. Start Required Services
 
 Before deploying to Kubernetes, start the required infrastructure services using Docker Compose.
 
 From the project root directory:
 
+```bash
 docker compose up -d
+```
 
-This will start the required services defined in the docker-compose.yml file.
+This will start the required services defined in the `docker-compose.yml` file.
 
+---
 
-3. Deploy Kubernetes Resources
+## 3. Deploy Kubernetes Resources
 
-Each service contains a k8s directory with the required Kubernetes manifests.
+Each service contains a `k8s` directory with the required Kubernetes manifests.
 
 Before applying them, review the configuration files and update any environment-specific values (such as IP addresses or hostnames) if needed.
 
-Then apply the manifests in order:
+Apply the manifests:
 
+```bash
 kubectl apply -f k8s/
+```
 
 Repeat this step for each service.
