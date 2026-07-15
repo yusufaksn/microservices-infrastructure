@@ -14,10 +14,7 @@ spec:
     spec:
       containers:
         - name: ticket-service-container
-          # 🔴 DEĞİŞEN SATIR: Minikube listesindeki tam ismi verdik
           image: docker.io/library/ticket-service:v10
-          # 💡 İPUCU: İmaj lokalde zaten var olduğu için 'Always' yerine 'IfNotPresent' yaparsak
-          # Kubernetes dışarıdan (internet üzerinden) çekmeye çalışmaz, direkt lokaldekini kullanır.
           imagePullPolicy: IfNotPresent 
           ports:
             - containerPort: 8502

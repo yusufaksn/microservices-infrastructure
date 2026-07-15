@@ -9,4 +9,4 @@ spec:
   ports:
     - port: 8504
       targetPort: 8504
-      nodePort: 30504  # Windows tarayıcısından test etmek için sabit port
+      nodePort: 30504  

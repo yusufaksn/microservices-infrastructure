@@ -14,10 +14,7 @@ spec:
     spec:
       containers:
         - name: notification-service-container
-          # 🔴 DEĞİŞEN SATIR: Minikube listesindeki tam ismi verdik
           image: docker.io/library/notification-service:v2
-          # 💡 İPUCU: İmaj lokalde zaten var olduğu için 'Always' yerine 'IfNotPresent' yaparsak
-          # Kubernetes dışarıdan (internet üzerinden) çekmeye çalışmaz, direkt lokaldekini kullanır.
           imagePullPolicy: IfNotPresent 
           ports:
             - containerPort: 8503
@@ -31,8 +28,8 @@ spec:
               value: "8503"
           resources:
             requests:
-              cpu: "250m"      # 0.25 Core - Gerçekçi başlangıç değeri
+              cpu: "250m"      
               memory: "256Mi"
             limits:
-              cpu: "500m"      # En fazla 0.5 Core
+              cpu: "500m"     
               memory: "512Mi"    
