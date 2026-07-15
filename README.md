@@ -2,6 +2,12 @@
 
 A sample microservices infrastructure built with **Spring Boot** and **Spring Cloud**, demonstrating a production-oriented architecture for scalable backend applications.
 
+## Architecture
+
+<p align="center">
+  <img src="images/architecture.png" alt="Microservices Architecture" width="100%">
+</p>
+
 ## Features
 
 - Reactive API Gateway (Spring Cloud Gateway)
@@ -140,6 +146,8 @@ The API Gateway will be available at:
 ```text
 http://localhost:8504
 ```
+
+---
 
 ## 5. Configure Keycloak
 
