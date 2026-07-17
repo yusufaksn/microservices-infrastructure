@@ -1,0 +1,37 @@
+server:
+  port: 8503
+
+spring:
+  application:
+    name: notification-service
+
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        inter.broker.listener.name: OUTSIDE
+        security.protocol: PLAINTEXT
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true  # Enables /actuator/health/liveness and /actuator/health/readiness
+
+  # Zipkin & Tracing Configuration
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://host.minikube.internal:9411/api/v2/spans

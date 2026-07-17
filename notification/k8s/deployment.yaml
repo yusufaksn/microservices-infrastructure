@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: notification-service-container
-          image: docker.io/library/notification-service:v2
+          image: notification-service:v1
           imagePullPolicy: IfNotPresent 
           ports:
             - containerPort: 8503

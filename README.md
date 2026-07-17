@@ -1,54 +1,101 @@
 # Microservices Infrastructure
 
-A sample microservices infrastructure built with **Spring Boot** and **Spring Cloud**, demonstrating a production-oriented architecture for scalable backend applications.
+A sample microservices infrastructure built with Spring Boot and Spring Cloud, demonstrating a production-oriented architecture for scalable backend applications.
 
-## Architecture
+---
+
+# Architecture
 
 <p align="center">
   <img src="images/architecture.png" alt="Microservices Architecture" width="100%">
 </p>
 
-## Features
+---
+
+# Features
 
 - Reactive API Gateway (Spring Cloud Gateway)
 - Retry and Circuit Breaker support
 - JWT Authentication and Authorization with Keycloak
 - Token Relay between microservices
-- Asynchronous messaging with RabbitMQ
+- Event-driven communication with Apache Kafka
+- Change Data Capture (CDC) using Debezium
 - Distributed tracing with Zipkin
-- Relational database integration
+- Prometheus monitoring
+- PostgreSQL integration
 - Kubernetes deployments
 - Horizontal Pod Autoscaler (HPA)
 - ConfigMaps and Secrets for externalized configuration
 - Docker containerization
+
+---
+
+# Project Structure
 
 The project currently consists of:
 
 - API Gateway
 - Ticket Service
 - Notification Service
+- Kafka
+- Debezium
 - Keycloak
-- RabbitMQ
 - Zipkin
-- Relational databases
-
-The primary goal of this project is to demonstrate how modern microservices can be deployed, secured, and scaled using Kubernetes while following common cloud-native practices.
+- PostgreSQL
 
 ---
 
-## 1. Kubernetes Cluster Setup
+# Event Flow
 
-For local development and testing, **Minikube** is recommended. It provides a lightweight Kubernetes cluster running on a local machine and allows testing Kubernetes resources such as Deployments, Services, ConfigMaps, Secrets, and HPA without requiring a cloud environment.
+The services communicate asynchronously using Kafka and Debezium.
 
-### Requirements
+```
+Client
+   │
+   ▼
+API Gateway
+   │
+   ▼
+Ticket Service
+   │
+   │ Save Ticket
+   ▼
+PostgreSQL (ticketdb)
+   │
+   │ WAL
+   ▼
+Debezium
+   │
+   ▼
+Kafka
+   │
+   ▼
+Notification Service
+```
 
-Install the following tools:
+The Ticket Service writes only to PostgreSQL.
+
+Debezium monitors PostgreSQL WAL (Write-Ahead Log), detects database changes, publishes them to Kafka, and Notification Service consumes these events.
+
+This approach removes direct Kafka dependencies from the Ticket Service while providing reliable event publishing through Change Data Capture (CDC).
+
+---
+
+# Kubernetes Cluster Setup
+
+For local development and testing, Minikube is recommended.
+
+It provides a lightweight Kubernetes cluster capable of running Deployments, Services, ConfigMaps, Secrets and Horizontal Pod Autoscaler without requiring a cloud provider.
+
+## Requirements
+
+Install:
 
 - Docker Desktop
 - Minikube
 - kubectl
 
-### Start Minikube Cluster
+Start Minikube:
 
 ```bash
 minikube start --driver=docker
@@ -62,28 +109,32 @@ kubectl get nodes
 
 Expected output:
 
-```text
-NAME       STATUS   ROLES           AGE
-minikube   Ready    control-plane   1m
+```
+NAME        STATUS   ROLES           AGE
+minikube    Ready    control-plane   1m
 ```
 
-### Enable Metrics Server
+---
 
-Horizontal Pod Autoscaler (HPA) requires the Kubernetes Metrics Server.
+## Enable Metrics Server
 
-Enable it in Minikube:
+Horizontal Pod Autoscaler requires Metrics Server.
+
+Enable it:
 
 ```bash
 minikube addons enable metrics-server
 ```
 
-Verify that it is running:
+Verify:
 
 ```bash
 kubectl top nodes
 ```
 
-### Stop / Delete Cluster
+---
+
+## Stop/Delete Cluster
 
 Stop:
 
@@ -99,72 +150,184 @@ minikube delete
 
 ---
 
-## 2. Start Required Services
+# Start Required Infrastructure
 
-Before deploying to Kubernetes, start the required infrastructure services using Docker Compose.
-
-From the project root directory:
+Start all required infrastructure services.
 
 ```bash
 docker compose up -d
 ```
 
-This will start the required services defined in the `docker-compose.yml` file.
+This starts:
+
+- PostgreSQL
+- Kafka
+- Debezium
+- Keycloak
+- Zipkin
 
 ---
 
-## 3. Deploy Kubernetes Resources
+# PostgreSQL Configuration
 
-Each service contains a `k8s` directory with the required Kubernetes manifests.
+Ticket Service uses PostgreSQL.
 
-Before applying them, review the configuration files and update any environment-specific values (such as IP addresses or hostnames) if needed.
+Example schema:
 
-Apply the manifests:
+```sql
+CREATE TABLE tickets (
+    id VARCHAR(36) PRIMARY KEY,
+    description VARCHAR(600),
+    notes VARCHAR(1000),
+    assignee VARCHAR(50),
+    ticket_date TIMESTAMP,
+    priority_type INTEGER,
+    ticket_status INTEGER,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+To allow Debezium to capture UPDATE and DELETE operations correctly, configure Replica Identity:
+
+```sql
+ALTER TABLE tickets REPLICA IDENTITY FULL;
+```
+
+---
+
+# Configure Debezium
+
+After PostgreSQL and Kafka are running, register the PostgreSQL connector.
+
+Example configuration:
+
+```json
+POST http://localhost:8083/connectors
+
+{
+  "name": "ticket-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "plugin.name": "pgoutput",
+    "database.hostname": "postgres_ticket",
+    "database.port": "5432",
+    "database.user": "user",
+    "database.password": "password",
+    "database.dbname": "ticketdb",
+    "topic.prefix": "postgres_ticket",
+    "table.include.list": "public.tickets"
+  }
+}
+```
+
+Debezium will monitor:
+
+- Database: `ticketdb`
+- Table: `public.tickets`
+
+and automatically publish all INSERT, UPDATE and DELETE events to Kafka.
+
+---
+
+# Deploy Kubernetes Resources
+
+Each service contains a `k8s` directory.
+
+Before deploying, verify configuration values such as hostnames and IP addresses if your environment differs.
+
+Deploy:
 
 ```bash
 kubectl apply -f k8s/
 ```
 
-Repeat this step for each service.
+Repeat for every service.
 
 ---
 
-## 4. Configure API Gateway
+# Configure API Gateway
 
-The API Gateway uses a Kubernetes ConfigMap for externalized configuration, including the backend service routes.
+The API Gateway uses ConfigMaps for externalized configuration.
 
-Before deploying or updating the Gateway, verify that the configured service endpoints match your Kubernetes environment. If you add a new microservice, update the Gateway ConfigMap to include its route.
+When adding a new service, update the Gateway ConfigMap with the appropriate route.
 
-Forward the Gateway service to your local machine:
+Forward Gateway locally:
 
 ```bash
 kubectl port-forward service/gateway-service 8504:8504
 ```
 
-The API Gateway will be available at:
+Gateway endpoint:
 
-```text
+```
 http://localhost:8504
 ```
 
 ---
 
-## 5. Configure Keycloak
+# Configure Keycloak
 
-After all services are running, configure Keycloak before testing the application.
+After all services are running:
 
-- Create or import a realm.
-- Create a client for the API Gateway.
-- Create at least one user.
-- Assign the required roles.
-- Obtain an access token.
-- Include the token in the `Authorization: Bearer <token>` header when calling protected endpoints.
+- Create or import a Realm
+- Create an API Gateway Client
+- Create at least one User
+- Assign the required Roles
+- Obtain an Access Token
+
+Use the token in requests:
+
+```
+Authorization: Bearer <access_token>
+```
 
 ---
 
-## 6. Verify the Deployment
+# Prometheus Monitoring
 
-Check that all resources are running correctly:
+Create the monitoring namespace:
+
+```bash
+kubectl create namespace monitoring
+```
+
+Install the Prometheus Operator CRDs:
+
+```bash
+kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/stripped-down-crds.yaml
+```
+
+Add the Helm repository:
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+helm repo update
+```
+
+Install the monitoring stack:
+
+```bash
+helm install prometheus prometheus-community/kube-prometheus-stack \
+    --namespace monitoring \
+    --create-namespace
+```
+
+The Gateway exposes metrics through:
+
+```
+/actuator/prometheus
+```
+
+which can be scraped by Prometheus using a ServiceMonitor.
+
+---
+
+# Verify Deployment
+
+Verify that every component is running correctly.
 
 ```bash
 kubectl get pods
@@ -182,10 +345,30 @@ kubectl get hpa
 kubectl top nodes
 ```
 
-If all Pods are in the `Running` state and the HPA is available, the application is ready to use.
+If all Pods are in the `Running` state and HPA is available, the application is ready.
 
-Distributed traces can be viewed in the Zipkin UI:
+---
 
-```text
+# Zipkin
+
+Distributed traces can be viewed at:
+
+```
 http://localhost:9411
 ```
+
+---
+
+# Technology Stack
+
+- Spring Boot
+- Spring Cloud Gateway
+- Spring Security
+- Keycloak
+- PostgreSQL
+- Apache Kafka
+- Debezium
+- Kubernetes
+- Docker
+- Zipkin
+- Prometheus

@@ -15,7 +15,7 @@ data:
   # =========================================================================
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_ID: "ticket-service-route"
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_URI: "http://ticket-service:8502"
-  SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_PREDICATES_0: "Path=/api/ticket/**"
+  SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_PREDICATES_0: "Path=/api/v1/tickets/**"
 
   # FILTERS_0: TokenRelay
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_ROUTES_0_FILTERS_0_NAME: "TokenRelay"
