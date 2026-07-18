@@ -186,13 +186,29 @@ CREATE TABLE tickets (
     created_at TIMESTAMP,
     updated_at TIMESTAMP
 );
+
+CREATE TABLE outbox_events (
+    id VARCHAR(36) PRIMARY KEY,
+    aggregate_type      VARCHAR(255) NOT NULL,
+    aggregate_id        VARCHAR(255) NOT NULL,
+    event_type          VARCHAR(255) NOT NULL,
+    payload             JSONB NOT NULL,
+
+    -- B3 Trace
+    trace_id            VARCHAR(32) NOT NULL,
+    span_id             VARCHAR(16) NOT NULL,
+
+    sampled             VARCHAR(1) NOT NULL DEFAULT '1',
+
+
+    db_committed_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE outbox_events REPLICA IDENTITY FULL;
+
 ```
 
 To allow Debezium to capture UPDATE and DELETE operations correctly, configure Replica Identity:
-
-```sql
-ALTER TABLE tickets REPLICA IDENTITY FULL;
-```
 
 ---
 
@@ -206,7 +222,7 @@ Example configuration:
 POST http://localhost:8083/connectors
 
 {
-  "name": "ticket-connector",
+  "name": "ticket-outbox-connector",
   "config": {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
     "tasks.max": "1",
@@ -217,17 +233,10 @@ POST http://localhost:8083/connectors
     "database.password": "password",
     "database.dbname": "ticketdb",
     "topic.prefix": "postgres_ticket",
-    "table.include.list": "public.tickets"
+    "table.include.list": "public.outbox_events",
+    "uuid.representation": "standard"
   }
 }
-```
-
-Debezium will monitor:
-
-- Database: `ticketdb`
-- Table: `public.tickets`
-
-and automatically publish all INSERT, UPDATE and DELETE events to Kafka.
 
 ---
 
