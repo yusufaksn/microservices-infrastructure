@@ -216,11 +216,15 @@ To allow Debezium to capture UPDATE and DELETE operations correctly, configure R
 
 After PostgreSQL and Kafka are running, register the PostgreSQL connector.
 
-Example configuration:
+Example:
+
+```http
+POST http://localhost:8083/connectors
+```
+
+Request body:
 
 ```json
-POST http://localhost:8083/connectors
-
 {
   "name": "ticket-outbox-connector",
   "config": {
@@ -237,6 +241,7 @@ POST http://localhost:8083/connectors
     "uuid.representation": "standard"
   }
 }
+```
 
 ---
 
@@ -253,8 +258,6 @@ kubectl apply -f k8s/
 ```
 
 Repeat for every service.
-
----
 
 # Configure API Gateway
 
