@@ -6,16 +6,20 @@ spring:
     name: notification-service
 
 
+
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: 192.168.1.2:9092
     consumer:
       group-id: notification-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      properties:
-        inter.broker.listener.name: OUTSIDE
-        security.protocol: PLAINTEXT
+
+
+        
+
+
+        
 
 management:
   endpoints:
@@ -34,4 +38,4 @@ management:
       probability: 1.0
   zipkin:
     tracing:
-      endpoint: http://host.minikube.internal:9411/api/v2/spans
+      endpoint: http://localhost:9411/api/v2/spans

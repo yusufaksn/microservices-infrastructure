@@ -11,9 +11,9 @@ public class TicketDto {
     private String description;     
     private String notes;         
     private String assignee;        
-    private Long ticketDate;        
-    private Integer priorityType;  
-    private Integer ticketStatus;  
-    private Long createdAt;         
-    private Long updatedAt;       
+    private String ticketDate;        
+    private String priorityType;  
+    private String ticketStatus;  
+    private String createdAt;         
+    private String updatedAt;       
 }
