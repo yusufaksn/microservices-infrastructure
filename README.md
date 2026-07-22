@@ -27,6 +27,8 @@ A sample microservices infrastructure built with Spring Boot and Spring Cloud, d
 - Horizontal Pod Autoscaler (HPA)
 - ConfigMaps and Secrets for externalized configuration
 - Docker containerization
+- MongoDB integration for Notification Service
+- Idempotency control for duplicate event processing
 
 ---
 
@@ -42,6 +44,7 @@ The project currently consists of:
 - Keycloak
 - Zipkin
 - PostgreSQL
+- MongoDB
 
 ---
 
@@ -78,6 +81,8 @@ The Ticket Service writes only to PostgreSQL.
 Debezium monitors PostgreSQL WAL (Write-Ahead Log), detects database changes, publishes them to Kafka, and Notification Service consumes these events.
 
 This approach removes direct Kafka dependencies from the Ticket Service while providing reliable event publishing through Change Data Capture (CDC).
+
+If the same event is received multiple times, the service detects the existing record and skips duplicate processing.
 
 ---
 
@@ -378,6 +383,7 @@ http://localhost:9411
 - Spring Security
 - Keycloak
 - PostgreSQL
+- MongoDB
 - Apache Kafka
 - Debezium
 - Kubernetes

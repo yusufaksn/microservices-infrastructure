@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: ticket-service-container
-          image: ticket-service:v2
+          image: ticket-service:v3
           imagePullPolicy: IfNotPresent 
           ports:
             - containerPort: 8502
