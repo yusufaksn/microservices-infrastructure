@@ -4,8 +4,9 @@ server:
 spring:
   application:
     name: notification-service
-
-
+  data:
+    mongodb:
+      uri: mongodb://admin:admin123@localhost:27017/notification?authSource=admin  
 
   kafka:
     bootstrap-servers: 192.168.1.2:9092
@@ -14,12 +15,6 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-
-
-        
-
-
-        
 
 management:
   endpoints:

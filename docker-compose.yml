@@ -121,7 +121,20 @@ services:
     depends_on:
       - kafka
 
+  mongodb:
+    image: mongo:8.0
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    volumes:
+      - mongodb_data:/data/db      
+
 volumes:
   mysql_data:
   postgres_data:
   ticket_postgres_data:
+  mongodb_data:

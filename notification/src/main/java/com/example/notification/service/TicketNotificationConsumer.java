@@ -22,43 +22,52 @@ public class TicketNotificationConsumer {
 
     private final ObjectMapper objectMapper;
     private final TraceContextBinder traceContextBinder;
-    private final Tracer tracer; 
+    private final Tracer tracer;
+    private final IdempotencyService idempotencyService;
 
     @KafkaListener(topics = "postgres_ticket.public.outbox_events", groupId = "notification-group")
     public void consumeTicket(String message) {
-        try {      
-            JsonNode jsonNode = objectMapper.readTree(message).get("payload").get("after");
-            if (jsonNode.isMissingNode() || jsonNode.isNull()) {
+        try {
+            JsonNode rootNode = objectMapper.readTree(message);
+            JsonNode afterNode = rootNode.path("payload").path("after");
+
+            if (afterNode.isMissingNode() || afterNode.isNull()) {
                 return;
             }
-            OutboxEventDto outboxEvent = objectMapper.treeToValue(jsonNode, OutboxEventDto.class);            
-            String traceId = outboxEvent.getTraceId();
-            String spanId = outboxEvent.getSpanId();
 
-            TraceContext parentContext = traceContextBinder.bind(traceId, spanId);
+            OutboxEventDto outboxEvent = objectMapper.treeToValue(afterNode, OutboxEventDto.class);
 
-            if (parentContext != null) {
+            // 2. Bind Trace Context (Performed first to maintain distributed trace chain)
+            TraceContext parentContext = traceContextBinder.bind(outboxEvent.getTraceId(), outboxEvent.getSpanId());
+            
+            Span newSpan = (parentContext != null) 
+                    ? tracer.newChild(parentContext).name("notification-received").start()
+                    : tracer.nextSpan().name("notification-received").start();
 
-                Span newSpan = tracer.newChild(parentContext)
-                                     .name("notification-received")
-                                     .start();
-
-                try (Tracer.SpanInScope scope = tracer.withSpanInScope(newSpan)) {
-                    TicketDto ticketDto = objectMapper.readValue(outboxEvent.getPayload(), TicketDto.class);
-                    log.info("[NOTIFICATION] Processing notification under trace.");
-                    log.info("---------------------------------------------------------------------------------------------------------------------");
-                    log.info("Notification Details: {}", ticketDto);
-                    log.info("---------------------------------------------------------------------------------------------------------------------");
-                } catch (Exception e) {
-                    newSpan.error(e); 
-                    throw e;
-                } finally {
-                    newSpan.finish();
+            // 3. START SPAN SCOPE (MongoDB call must stay INSIDE this block)
+            try (Tracer.SpanInScope scope = tracer.withSpanInScope(newSpan)) {
+                
+                // Idempotency check is inside the active span scope.
+                // This ensures Tracer automatically propagates TraceID and SpanID via inheritance to IdempotencyService.
+                if (!idempotencyService.processIfFirstTime(outboxEvent.getId())) {
+                    return; // Already processed
                 }
+
+                TicketDto ticketDto = objectMapper.readValue(outboxEvent.getPayload(), TicketDto.class);
+                log.info("[NOTIFICATION] Processing notification for Ticket ID: {}", ticketDto.getId());
+                log.info("Notification Details: {}", ticketDto);
+
+            } catch (Exception e) {
+                newSpan.error(e);
+                idempotencyService.undoProcessing(outboxEvent.getId());
+                throw e; 
+            } finally {
+                newSpan.finish();
             }
 
         } catch (Exception e) {
-            log.error("An error occurred while processing the ticket message from Kafka: ", e);
+            log.error("Error occurred while processing ticket message from Kafka: ", e);
+            throw new RuntimeException(e);
         }
     }
 }
