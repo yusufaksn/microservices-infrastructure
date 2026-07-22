@@ -94,6 +94,12 @@
             <artifactId>postgresql</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>net.ttddyy.observation</groupId>
+            <artifactId>datasource-micrometer-spring-boot</artifactId>
+            <version>1.0.6</version>
+        </dependency>
+
     </dependencies>
 
     <dependencyManagement>

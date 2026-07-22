@@ -6,8 +6,13 @@ data:
   SERVER_PORT: "8503"
   SPRING_APPLICATION_NAME: notification-service
 
- 
-  SPRING_KAFKA_BOOTSTRAP_SERVERS: 192.168.1.5:9092
+  # Kafka Configuration
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "192.168.1.2:9092"
+  SPRING_KAFKA_CONSUMER_GROUP_ID: "notification-group"
 
+  # MongoDB Configuration (Idempotency)
+  SPRING_DATA_MONGODB_URI: "mongodb://host.minikube.internal:27017/notification_db"
+
+  # Tracing (Zipkin & Micrometer)
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
-  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://host.minikube.internal:9411/api/v2/spans
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://host.minikube.internal:9411/api/v2/spans"

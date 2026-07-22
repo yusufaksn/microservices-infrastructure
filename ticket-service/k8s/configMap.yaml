@@ -9,11 +9,16 @@ data:
   # PostgreSQL JDBC driver configuration
   SPRING_DATASOURCE_URL: "jdbc:postgresql://host.minikube.internal:5434/ticketdb"
   SPRING_DATASOURCE_USERNAME: "user"
-  SPRING_DATASOURCE_PASSWORD: "password" 
+  SPRING_DATASOURCE_PASSWORD: "password"
+  SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
 
-  # Tracing (Zipkin) 
+  # JDBC Observation (Micrometer SQL Tracing)
+  JDBC_DATASOURCE_PROXY_ENABLED: "true"
+  JDBC_INCLUDES: "query,fetch"
+
+  # Tracing (Zipkin & Micrometer)
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
-  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://host.minikube.internal:9411/api/v2/spans
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://host.minikube.internal:9411/api/v2/spans"
 
-  # Security (Keycloak) 
+  # Security (Keycloak)
   SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "http://keycloak:8080/realms/master"
