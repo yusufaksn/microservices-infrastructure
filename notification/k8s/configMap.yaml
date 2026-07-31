@@ -10,8 +10,8 @@ data:
   SPRING_KAFKA_BOOTSTRAP_SERVERS: "192.168.1.2:9092"
   SPRING_KAFKA_CONSUMER_GROUP_ID: "notification-group"
 
-  # MongoDB Configuration (Idempotency)
-  SPRING_DATA_MONGODB_URI: "mongodb://host.minikube.internal:27017/notification_db"
+
+  SPRING_DATA_MONGODB_URI: "mongodb://admin:admin123@host.minikube.internal:27017/notification_db?authSource=admin"
 
   # Tracing (Zipkin & Micrometer)
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
