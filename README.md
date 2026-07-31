@@ -74,6 +74,11 @@ Kafka
    │
    ▼
 Notification Service
+   │
+   │ Idempotency Check
+   ▼
+MongoDB
+
 ```
 
 The Ticket Service writes only to PostgreSQL.
