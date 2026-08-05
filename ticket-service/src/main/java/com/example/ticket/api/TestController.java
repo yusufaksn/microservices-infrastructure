@@ -5,11 +5,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/test-action")
+@RequestMapping("/deployment")
 public class TestController {
 
-    @GetMapping
-    public String test() {
+    @GetMapping("/status")
+    public String status() {
         return "CI/CD deployment successful";
     }
 }
