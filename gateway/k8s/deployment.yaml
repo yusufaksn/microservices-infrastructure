@@ -13,12 +13,11 @@ spec:
         app: gateway-app
     spec:
       containers:
-      - name: gateway-container
-        image: gateway-service:v6
-        imagePullPolicy: Never
-        ports:
-        - containerPort: 8504
-
-        envFrom:
-        - configMapRef:
-            name: gateway-config
+        - name: gateway-container
+          image: ysfaksn/api-gateway:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8504
+          envFrom:
+            - configMapRef:
+                name: gateway-config

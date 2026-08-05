@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: ticket-service-container
-          image: ticket-service:v4
-          imagePullPolicy: IfNotPresent 
+          image: ysfaksn/ticket-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8502
           envFrom:
@@ -28,8 +28,8 @@ spec:
               value: "8502"
           resources:
             requests:
-              cpu: "250m"      
+              cpu: "250m"
               memory: "256Mi"
             limits:
-              cpu: "500m"      
-              memory: "512Mi"    
+              cpu: "500m"
+              memory: "512Mi"

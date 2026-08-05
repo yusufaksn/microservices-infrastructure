@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: notification-service-container
-          image: notification-service:v2
-          imagePullPolicy: IfNotPresent 
+          image: ysfaksn/notification-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8503
           envFrom:
@@ -28,8 +28,8 @@ spec:
               value: "8503"
           resources:
             requests:
-              cpu: "250m"      
+              cpu: "250m"
               memory: "256Mi"
             limits:
-              cpu: "500m"     
-              memory: "512Mi"    
+              cpu: "500m"
+              memory: "512Mi"
