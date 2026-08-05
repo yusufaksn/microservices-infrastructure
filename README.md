@@ -27,6 +27,8 @@ A sample microservices infrastructure built with Spring Boot and Spring Cloud, d
 - Horizontal Pod Autoscaler (HPA)
 - ConfigMaps and Secrets for externalized configuration
 - Docker containerization
+- CI/CD pipeline with GitHub Actions
+- Automated Docker image build and push to Docker Hub
 - MongoDB integration for Notification Service
 - Idempotency control for duplicate event processing
 
@@ -395,3 +397,42 @@ http://localhost:9411
 - Docker
 - Zipkin
 - Prometheus
+
+
+## CI/CD Pipeline
+
+The project uses GitHub Actions for automated Docker image build and push.
+
+On every push to the main branch:
+
+1. GitHub Actions workflow is triggered.
+2. Docker images are built for each microservice.
+3. Images are pushed to Docker Hub.
+4. Kubernetes deployments can pull the updated images.
+
+Pipeline flow:
+
+GitHub Repository
+        |
+        ▼
+GitHub Actions
+        |
+        ▼
+Docker Build
+        |
+        ▼
+Docker Hub
+        |
+        ▼
+Kubernetes Deployment
+
+
+Docker images:
+
+- ysfaksn/api-gateway
+- ysfaksn/ticket-service
+- ysfaksn/notification-service
+
+Workflow file:
+
+.github/workflows/docker.yml
