@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.example.ticket.component.SecurityUtils;
 
 import com.example.ticket.dto.TicketDto;
+import com.example.ticket.exception.ServiceUnavailableException;
 import com.example.ticket.model.PriorityType;
 import com.example.ticket.model.Ticket;
 import com.example.ticket.model.TicketStatus;
@@ -19,10 +20,13 @@ import com.example.ticket.repository.OutboxEventRepository;
 import com.example.ticket.repository.TicketRepository;
 import com.example.ticket.service.TicketService;
 import com.fasterxml.jackson.databind.JsonNode;
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
@@ -39,6 +43,7 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @Transactional
+    @CircuitBreaker(name = "ticket-db", fallbackMethod = "fallback")
     public TicketDto save(TicketDto ticketDto) {
         Ticket ticket = modelMapper.map(ticketDto, Ticket.class);
        
@@ -70,6 +75,11 @@ public class TicketServiceImpl implements TicketService {
         
         outboxEventRepository.save(outboxEvent);
         return ticketDto;
+    }
+
+
+    public TicketDto fallback(TicketDto ticketDto, Exception ex) {
+        throw new ServiceUnavailableException(  "Ticket service is temporarily unavailable. Please try again later.");
     }
 
     @Override
