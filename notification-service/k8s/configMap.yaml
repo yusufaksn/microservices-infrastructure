@@ -4,7 +4,9 @@ metadata:
   name: notification-service-config
 data:
   SERVER_PORT: "8503"
+  SERVER_SHUTDOWN: "graceful"
   SPRING_APPLICATION_NAME: notification-service
+  SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: "30s"
 
   # Kafka Configuration
   SPRING_KAFKA_BOOTSTRAP_SERVERS: "192.168.1.2:9092"

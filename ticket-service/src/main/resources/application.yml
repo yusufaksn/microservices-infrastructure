@@ -1,9 +1,12 @@
 server:
   port: 8502
+  shutdown: graceful
 
 spring:
   application:
     name: ticket-service
+  lifecycle:
+    timeout-per-shutdown-phase: 30s  
 
   datasource:
     url: jdbc:postgresql://localhost:5434/ticketdb

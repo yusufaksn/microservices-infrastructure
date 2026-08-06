@@ -1,9 +1,12 @@
 server:
   port: 8503
+  shutdown: graceful
 
 spring:
   application:
     name: notification-service
+  lifecycle:
+    timeout-per-shutdown-phase: 30s    
   data:
     mongodb:
       uri: mongodb://admin:admin123@localhost:27017/notification_db?authSource=admin  

@@ -4,7 +4,9 @@ metadata:
   name: ticket-service-config
 data:
   SERVER_PORT: "8502"
-  SPRING_APPLICATION_NAME: ticket-service
+  SERVER_SHUTDOWN: "graceful"
+  SPRING_APPLICATION_NAME: "ticket-service"
+  SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: "30s"
 
   # PostgreSQL JDBC driver configuration
   SPRING_DATASOURCE_URL: "jdbc:postgresql://host.minikube.internal:5434/ticketdb"
