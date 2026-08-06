@@ -15,7 +15,7 @@ A sample microservices infrastructure built with Spring Boot and Spring Cloud, d
 # Features
 
 - Reactive API Gateway (Spring Cloud Gateway)
-- Retry and Circuit Breaker support
+- Graceful Shutdown, Retry and Circuit Breaker support
 - JWT Authentication and Authorization with Keycloak
 - Token Relay between microservices
 - Event-driven communication with Apache Kafka
