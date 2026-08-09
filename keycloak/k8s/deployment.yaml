@@ -15,37 +15,30 @@ spec:
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:latest
-
           args:
             - start-dev
-
           ports:
             - containerPort: 8080
-
           env:
             - name: KEYCLOAK_ADMIN
               value: admin
-
             - name: KEYCLOAK_ADMIN_PASSWORD
               value: admin123
-
             - name: KC_DB
               value: postgres
-
             - name: KC_DB_URL
               value: jdbc:postgresql://host.minikube.internal:5432/keycloak
-
             - name: KC_DB_USERNAME
               value: keycloak
-
             - name: KC_DB_PASSWORD
               value: keycloak123
-
+            - name: KC_HTTP_ENABLED
+              value: "true"
+            - name: KC_PROXY_HEADERS
+              value: xforwarded
             - name: KC_HOSTNAME
-              value: keycloak
-
+              value: http://auth.test
             - name: KC_HOSTNAME_STRICT
               value: "false"
-
             - name: KC_HOSTNAME_STRICT_HTTPS
               value: "false"

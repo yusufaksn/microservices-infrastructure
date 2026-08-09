@@ -1,5 +1,6 @@
 # Microservices Infrastructure
 
+
 A sample microservices infrastructure built with Spring Boot and Spring Cloud, demonstrating a production-oriented architecture for scalable backend applications.
 
 ---
@@ -54,7 +55,7 @@ The project currently consists of:
 
 The services communicate asynchronously using Kafka and Debezium.
 
-```
+```text
 Client
    │
    ▼
@@ -80,7 +81,6 @@ Notification Service
    │ Idempotency Check
    ▼
 MongoDB
-
 ```
 
 The Ticket Service writes only to PostgreSQL.
@@ -121,7 +121,7 @@ kubectl get nodes
 
 Expected output:
 
-```
+```text
 NAME        STATUS   ROLES           AGE
 minikube    Ready    control-plane   1m
 ```
@@ -212,15 +212,13 @@ CREATE TABLE outbox_events (
 
     sampled             VARCHAR(1) NOT NULL DEFAULT '1',
 
-
     db_committed_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 ALTER TABLE outbox_events REPLICA IDENTITY FULL;
-
 ```
 
-To allow Debezium to capture UPDATE and DELETE operations correctly, configure Replica Identity:
+To allow Debezium to capture UPDATE and DELETE operations correctly, configure Replica Identity.
 
 ---
 
@@ -271,23 +269,69 @@ kubectl apply -f k8s/
 
 Repeat for every service.
 
-# Configure API Gateway
+---
 
-The API Gateway uses ConfigMaps for externalized configuration.
+# Configure Ingress
 
-When adding a new service, update the Gateway ConfigMap with the appropriate route.
-
-Forward Gateway locally:
+Enable the NGINX Ingress Controller in Minikube:
 
 ```bash
-kubectl port-forward service/gateway-service 8504:8504
+minikube addons enable ingress
 ```
 
-Gateway endpoint:
+Apply the Ingress manifest:
 
+```bash
+kubectl apply -f k8s/ingress.yaml
 ```
-http://localhost:8504
+
+The NGINX Ingress Controller manages external access and routes traffic to services within the cluster.
+
+When adding a new service, update the Ingress resource rules with the appropriate host and path mappings.
+
+For local access, expose the Ingress Controller using either:
+
+```bash
+minikube tunnel
 ```
+
+or:
+
+```bash
+kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 80:80
+```
+
+The following local domains are used:
+
+- `http://apigateway.test`
+- `http://auth.test`
+
+Add the following entries to your local hosts file (`/etc/hosts` or `C:\Windows\System32\drivers\etc\hosts`):
+
+```text
+127.0.0.1 auth.test
+127.0.0.1 apigateway.test
+```
+
+Deployments requiring access through the local domain names use `hostAliases` to route requests to the Minikube host.
+
+Get the Minikube IP with:
+
+```bash
+minikube ip
+```
+
+Update the `hostAliases` section in your deployment manifests with the returned IP:
+
+```yaml
+hostAliases:
+  - ip: "192.168.49.2"
+    hostnames:
+      - "apigateway.test"
+      - "auth.test"
+```
+
+Replace `192.168.49.2` with the IP returned by `minikube ip`.
 
 ---
 
@@ -303,7 +347,7 @@ After all services are running:
 
 Use the token in requests:
 
-```
+```text
 Authorization: Bearer <access_token>
 ```
 
@@ -320,14 +364,13 @@ kubectl create namespace monitoring
 Install the Prometheus Operator CRDs:
 
 ```bash
-kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/stripped-down-crds.yaml
+kubectl apply --server-side -f [https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/stripped-down-crds.yaml](https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/stripped-down-crds.yaml)
 ```
 
 Add the Helm repository:
 
 ```bash
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-
+helm repo add prometheus-community [https://prometheus-community.github.io/helm-charts](https://prometheus-community.github.io/helm-charts)
 helm repo update
 ```
 
@@ -341,7 +384,7 @@ helm install prometheus prometheus-community/kube-prometheus-stack \
 
 The Gateway exposes metrics through:
 
-```
+```text
 /actuator/prometheus
 ```
 
@@ -351,21 +394,12 @@ which can be scraped by Prometheus using a ServiceMonitor.
 
 # Verify Deployment
 
-Verify that every component is running correctly.
+Verify that every component is running correctly:
 
 ```bash
 kubectl get pods
-```
-
-```bash
 kubectl get services
-```
-
-```bash
 kubectl get hpa
-```
-
-```bash
 kubectl top nodes
 ```
 
@@ -377,7 +411,7 @@ If all Pods are in the `Running` state and HPA is available, the application is 
 
 Distributed traces can be viewed at:
 
-```
+```text
 http://localhost:9411
 ```
 
@@ -398,8 +432,9 @@ http://localhost:9411
 - Zipkin
 - Prometheus
 
+---
 
-## CI/CD Pipeline
+# CI/CD Pipeline
 
 The project uses GitHub Actions for automated Docker image build and push.
 
@@ -412,27 +447,28 @@ On every push to the main branch:
 
 Pipeline flow:
 
+```text
 GitHub Repository
-        |
+        │
         ▼
 GitHub Actions
-        |
+        │
         ▼
 Docker Build
-        |
+        │
         ▼
 Docker Hub
-        |
+        │
         ▼
 Kubernetes Deployment
-
+```
 
 Docker images:
 
-- ysfaksn/api-gateway
-- ysfaksn/ticket-service
-- ysfaksn/notification-service
+- `ysfaksn/api-gateway`
+- `ysfaksn/ticket-service`
+- `ysfaksn/notification-service`
 
 Workflow file:
 
-.github/workflows/docker.yml
+`.github/workflows/docker.yml`

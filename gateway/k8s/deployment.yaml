@@ -12,6 +12,11 @@ spec:
       labels:
         app: gateway-app
     spec:
+      hostAliases:
+        - ip: "192.168.49.2"
+          hostnames:
+            - "auth.test"
+            - "apigateway.test"
       containers:
         - name: gateway-container
           image: ysfaksn/api-gateway:latest

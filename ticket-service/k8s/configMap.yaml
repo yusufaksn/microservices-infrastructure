@@ -28,7 +28,7 @@ data:
   MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://host.minikube.internal:9411/api/v2/spans"
 
   # Security (Keycloak)
-  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "http://keycloak:8080/realms/master"
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "http://auth.test/realms/master"
 
   # Resilience4j Circuit Breaker
   RESILIENCE4J_CIRCUITBREAKER_INSTANCES_TICKET_DB_SLIDING_WINDOW_TYPE: "COUNT_BASED"

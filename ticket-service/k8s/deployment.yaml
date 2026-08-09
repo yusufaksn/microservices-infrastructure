@@ -12,6 +12,11 @@ spec:
       labels:
         app: ticket-service
     spec:
+      hostAliases:
+        - ip: "192.168.49.2"
+          hostnames:
+            - "auth.test"
+            - "apigateway.test"
       containers:
         - name: ticket-service-container
           image: ysfaksn/ticket-service:latest
