@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticket-query-service
+spec:
+  selector:
+    app: ticket-query-service
+  ports:
+    - port: 8505
+      targetPort: 8505
+  type: NodePort

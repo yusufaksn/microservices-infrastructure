@@ -85,3 +85,19 @@ jobs:
 
       - name: Push Notification Service
         run: docker push ysfaksn/notification-service:latest
+
+      # -----------------------------
+      # Ticket Service Query
+      # -----------------------------
+      - name: Test, Build & Package Ticket Service Query
+        working-directory: ticket-service-query
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/ticketdb
+          SPRING_DATASOURCE_USERNAME: test
+          SPRING_DATASOURCE_PASSWORD: test
+        run: |
+          mvn clean package
+          docker build -t ysfaksn/ticket-service-query:latest .
+
+      - name: Push Ticket Service Query
+        run: docker push ysfaksn/ticket-service-query:latest

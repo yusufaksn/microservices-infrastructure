@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticket-query-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ticket-query-service
+  template:
+    metadata:
+      labels:
+        app: ticket-query-service
+    spec:
+      hostAliases:
+        - ip: "192.168.49.2"
+          hostnames:
+            - "auth.test"
+            - "apigateway.test"
+      containers:
+        - name: ticket-query-service-container
+          image: ysfaksn/ticket-query-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8505
+          envFrom:
+            - configMapRef:
+                name: ticket-query-service-config
+            - secretRef:
+                name: ticket-query-service-secret
+          env:
+            - name: SERVER_PORT
+              value: "8505"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
