@@ -56,6 +56,11 @@ jobs:
       # -----------------------------
       # Ticket Service
       # -----------------------------
+      - name: Initialize test database schema
+        env:
+          PGPASSWORD: test
+        run: psql -h localhost -p 5432 -U test -d ticketdb -f ticket-service/db-init/schema.sql
+
       - name: Test, Build & Package Ticket Service
         working-directory: ticket-service
         env:
