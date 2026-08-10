@@ -32,7 +32,7 @@ A sample microservices infrastructure built with Spring Boot and Spring Cloud, d
 - Automated Docker image build and push to Docker Hub
 - MongoDB integration for Notification Service
 - Idempotency control for duplicate event processing
-- Automated integration testing with JUnit 5 and Mockito
+- Automated Integration Testing: End-to-end verification for database operations and event workflows.
 
 ---
 
@@ -421,7 +421,7 @@ http://localhost:9411
 
 # Testing
 
-The project uses JUnit 5, Mockito, and Spring Boot Test for automated testing.
+The project includes automated unit and integration tests to ensure code quality and system reliability.
 
 Tests are executed automatically during the Maven build process:
 
