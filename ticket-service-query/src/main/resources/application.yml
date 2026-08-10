@@ -1,0 +1,59 @@
+server:
+  port: 8505
+  shutdown: graceful
+
+spring:
+  application:
+    name: ticket-service-query
+  lifecycle:
+    timeout-per-shutdown-phase: 30s  
+
+  datasource:
+    url: jdbc:postgresql://localhost:5435/ticketdb
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connectionTimeout: 5000
+      validationTimeout: 3000
+      maxLifetime: 1700000
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/master
+
+jdbc:
+  datasource-proxy:
+    enabled: true
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,circuitbreakers,circuitbreakerevents
+
+  health:
+    circuitbreakers:
+      enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      ticket-db:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 5
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true

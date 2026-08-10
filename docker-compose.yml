@@ -40,6 +40,24 @@ services:
       - max_wal_senders=4
     volumes:
       - ticket_postgres_data:/var/lib/postgresql/data
+      - ./postgres-cluster/init-master.sh:/docker-entrypoint-initdb.d/init-master.sh
+
+  postgres_ticket_replica:
+    image: postgres:16
+    container_name: ticket-postgres-replica
+    restart: unless-stopped
+    depends_on:
+      - postgres_ticket
+    environment:
+      POSTGRES_DB: ticketdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5435:5432"
+    volumes:
+      - ticket_postgres_replica_data:/var/lib/postgresql/data
+      - ./postgres-cluster/init-replica.sh:/init-replica.sh
+    entrypoint: ["/bin/bash", "/init-replica.sh"]
 
   kafka:
       image: apache/kafka:3.9.0
@@ -114,4 +132,5 @@ volumes:
   mysql_data:
   postgres_data:
   ticket_postgres_data:
+  ticket_postgres_replica_data:
   mongodb_data:
