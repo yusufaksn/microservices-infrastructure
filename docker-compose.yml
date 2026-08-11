@@ -30,17 +30,10 @@ services:
       POSTGRES_PASSWORD: password
     ports:
       - "5434:5432"
-    command:
-      - postgres
-      - -c
-      - wal_level=logical
-      - -c
-      - max_replication_slots=4
-      - -c
-      - max_wal_senders=4
     volumes:
       - ticket_postgres_data:/var/lib/postgresql/data
       - ./postgres-cluster/init-master.sh:/docker-entrypoint-initdb.d/init-master.sh
+    entrypoint: ["/bin/bash", "-c", "tr -d '\\r' < /docker-entrypoint-initdb.d/init-master.sh > /tmp/init-master.sh && chmod +x /tmp/init-master.sh && cp /tmp/init-master.sh /docker-entrypoint-initdb.d/init-master.sh && exec docker-entrypoint.sh postgres -c wal_level=logical -c max_replication_slots=4 -c max_wal_senders=4"]
 
   postgres_ticket_replica:
     image: postgres:16
@@ -57,8 +50,8 @@ services:
     volumes:
       - ticket_postgres_replica_data:/var/lib/postgresql/data
       - ./postgres-cluster/init-replica.sh:/init-replica.sh
-    entrypoint: ["/bin/bash", "/init-replica.sh"]
-
+    entrypoint: ["/bin/bash", "-c", "tr -d '\\r' < /init-replica.sh > /tmp/init.sh && chmod +x /tmp/init.sh && exec /tmp/init.sh"]
+    
   kafka:
       image: apache/kafka:3.9.0
       container_name: kafka
@@ -70,7 +63,7 @@ services:
         KAFKA_NODE_ID: 1
         KAFKA_PROCESS_ROLES: broker,controller
         KAFKA_LISTENERS: PLAINTEXT://:29092,EXTERNAL://0.0.0.0:9092,MINIKUBE://0.0.0.0:9094,CONTROLLER://:9093
-        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,EXTERNAL://192.168.1.2:9092,MINIKUBE://host.minikube.internal:9094
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,EXTERNAL://192.168.1.3:9092,MINIKUBE://host.minikube.internal:9094
         KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
         KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT,MINIKUBE:PLAINTEXT
         KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
@@ -80,7 +73,9 @@ services:
         KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
 
   connect:
-    image: debezium/connect:2.7.3.Final
+    build:
+      context: .
+      dockerfile: Dockerfile.debezium
     container_name: debezium-connect
     restart: unless-stopped
     depends_on:
@@ -128,9 +123,23 @@ services:
     volumes:
       - mongodb_data:/data/db      
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+ 
+
 volumes:
   mysql_data:
   postgres_data:
   ticket_postgres_data:
   ticket_postgres_replica_data:
   mongodb_data:
+  elasticsearch_data:

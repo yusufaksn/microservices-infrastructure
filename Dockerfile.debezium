@@ -1,0 +1,11 @@
+FROM debezium/connect:2.7.3.Final
+
+USER root
+
+RUN mkdir -p /kafka/connect/elasticsearch \
+    && curl -L https://hub-downloads.confluent.io/api/plugins/confluentinc/kafka-connect-elasticsearch/versions/14.1.2/confluentinc-kafka-connect-elasticsearch-14.1.2.zip \
+    -o /tmp/elasticsearch.zip \
+    && unzip -q /tmp/elasticsearch.zip -d /kafka/connect/elasticsearch \
+    && rm /tmp/elasticsearch.zip
+
+USER kafka

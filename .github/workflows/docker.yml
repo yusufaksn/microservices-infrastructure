@@ -101,3 +101,15 @@ jobs:
 
       - name: Push Ticket Service Query
         run: docker push ysfaksn/ticket-service-query:latest
+
+      # -----------------------------
+      # Ticket Search Service
+      # -----------------------------
+      - name: Build & Package Ticket Search Service
+        working-directory: ticket-search-service
+        run: |
+          mvn clean package -DskipTests
+          docker build -t ysfaksn/ticket-service-search:latest .
+
+      - name: Push Ticket Search Service
+        run: docker push ysfaksn/ticket-service-search:latest

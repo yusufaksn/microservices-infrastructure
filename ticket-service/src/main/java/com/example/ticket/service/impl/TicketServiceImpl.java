@@ -6,7 +6,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Spring Transactional kullanıldı
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.ticket.component.SecurityUtils;
 import com.example.ticket.dto.TicketDto;
@@ -48,14 +48,13 @@ public class TicketServiceImpl implements TicketService {
         ticket.setTicketStatus(TicketStatus.valueOf(ticketDto.getTicketStatus()));
         ticket.setPriorityType(PriorityType.valueOf(ticketDto.getPriorityType()));
         ticket.setAssignee(securityUtils.getCurrentUserId());
-        
-        // saveAndFlush ile verinin anında DB/Oturuma yazılması sağlandı
+
         ticket = ticketRepository.saveAndFlush(ticket);
 
         Span currentSpan = tracer.currentSpan();
 
         OutboxEvent outboxEvent = new OutboxEvent();
-        // UUID -> String dönüşümü garantiye alındı
+
         outboxEvent.setAggregateId(ticket.getId().toString()); 
         outboxEvent.setAggregateType("Ticket");
         outboxEvent.setEventType("TicketCreated");
@@ -72,7 +71,7 @@ public class TicketServiceImpl implements TicketService {
         
         outboxEventRepository.saveAndFlush(outboxEvent);
 
-        // Oluşturulan id ve güncel verilerle dolu olan Ticket nesnesi DTO'ya dönüştürülüp döndürüldü
+
         return modelMapper.map(ticket, TicketDto.class);
     }
 

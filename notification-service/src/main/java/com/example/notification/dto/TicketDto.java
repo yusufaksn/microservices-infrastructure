@@ -1,19 +1,36 @@
 package com.example.notification.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 
 @Data
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class TicketDto {
-    private String id;          
-    private String description;     
-    private String notes;         
-    private String assignee;        
-    private String ticketDate;        
-    private String priorityType;  
-    private String ticketStatus;  
-    private String createdAt;         
-    private String updatedAt;       
+
+    @JsonProperty("payload_id")
+    private String id;
+
+    @JsonProperty("payload_description")
+    private String description;
+
+    @JsonProperty("payload_notes")
+    private String notes;
+
+    @JsonProperty("payload_assignee")
+    private String assignee;
+
+    @JsonProperty("payload_ticketDate")
+    private String ticketDate;
+
+    @JsonProperty("payload_priorityType")
+    private String priorityType;
+
+    @JsonProperty("payload_ticketStatus")
+    private String ticketStatus;
+
+    @JsonProperty("payload_createdAt")
+    private String createdAt;
+
+    @JsonProperty("payload_updatedAt")
+    private String updatedAt;
 }

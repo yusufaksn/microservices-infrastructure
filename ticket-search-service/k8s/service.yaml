@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticket-search-service
+spec:
+  selector:
+    app: ticket-search-service
+  ports:
+    - port: 8506
+      targetPort: 8506
+  type: NodePort

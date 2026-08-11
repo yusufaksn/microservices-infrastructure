@@ -4,7 +4,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import com.example.notification.component.TraceContextBinder;
-import com.example.notification.dto.OutboxEventDto;
 import com.example.notification.dto.TicketDto;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,41 +24,44 @@ public class TicketNotificationConsumer {
     private final Tracer tracer;
     private final IdempotencyService idempotencyService;
 
-    @KafkaListener(topics = "postgres_ticket.public.outbox_events", groupId = "notification-group")
+  
+    @KafkaListener(topics = "outbox.event.Ticket", groupId = "notification-group")
     public void consumeTicket(String message) {
         try {
+            log.info("[NOTIFICATION] Inbound message: {}", message);
+            
             JsonNode rootNode = objectMapper.readTree(message);
-            JsonNode afterNode = rootNode.path("payload").path("after");
 
-            if (afterNode.isMissingNode() || afterNode.isNull()) {
-                return;
-            }
+   
+            String traceId = rootNode.path("traceId").asText(null);
+            String spanId = rootNode.path("spanId").asText(null);
 
-            OutboxEventDto outboxEvent = objectMapper.treeToValue(afterNode, OutboxEventDto.class);
 
-            // 2. Bind Trace Context (Performed first to maintain distributed trace chain)
-            TraceContext parentContext = traceContextBinder.bind(outboxEvent.getTraceId(), outboxEvent.getSpanId());
+            TicketDto ticketDto = objectMapper.treeToValue(rootNode, TicketDto.class);
+            
+            String ticketId = rootNode.has("id") ? rootNode.path("id").asText() : rootNode.path("payload_id").asText();
+
+            // Trace Context Binding
+            TraceContext parentContext = traceContextBinder.bind(traceId, spanId);
             
             Span newSpan = (parentContext != null) 
                     ? tracer.newChild(parentContext).name("notification-received").start()
                     : tracer.nextSpan().name("notification-received").start();
 
-            // 3. START SPAN SCOPE (MongoDB call must stay INSIDE this block)
             try (Tracer.SpanInScope scope = tracer.withSpanInScope(newSpan)) {
                 
-                // Idempotency check is inside the active span scope.
-                // This ensures Tracer automatically propagates TraceID and SpanID via inheritance to IdempotencyService.
-                if (!idempotencyService.processIfFirstTime(outboxEvent.getId())) {
-                    return; // Already processed
+                // Idempotency 
+                if (!idempotencyService.processIfFirstTime(ticketId)) {
+                    log.info("[NOTIFICATION] Ticket ID {} already processed, skipping.", ticketId);
+                    return;
                 }
 
-                TicketDto ticketDto = objectMapper.readValue(outboxEvent.getPayload(), TicketDto.class);
-                log.info("[NOTIFICATION] Processing notification for Ticket ID: {}", ticketDto.getId());
+                log.info("[NOTIFICATION] Processing notification for Ticket ID: {}", ticketId);
                 log.info("Notification Details: {}", ticketDto);
 
             } catch (Exception e) {
                 newSpan.error(e);
-                idempotencyService.undoProcessing(outboxEvent.getId());
+                idempotencyService.undoProcessing(ticketId);
                 throw e; 
             } finally {
                 newSpan.finish();
