@@ -39,18 +39,18 @@ class TicketNotificationConsumerIntegrationTest {
     @DisplayName("Should process message when event ID is received for the first time")
     void shouldProcessMessageWhenReceivedForFirstTime() {
         // Arrange
-        String eventId = UUID.randomUUID().toString();
         String ticketId = UUID.randomUUID().toString();
-        String jsonMessage = createSampleKafkaMessage(eventId, ticketId, "OPEN");
+        String jsonMessage = createSampleKafkaMessage(ticketId, "OPEN");
 
-        when(idempotencyService.processIfFirstTime(eventId)).thenReturn(true);
+        // Servis kodu idempotency key olarak ticketId kullanıyor (payload_id fallback)
+        when(idempotencyService.processIfFirstTime(ticketId)).thenReturn(true);
 
         // Act & Assert
         assertThatCode(() -> consumer.consumeTicket(jsonMessage))
                 .doesNotThrowAnyException();
 
         // Verify Idempotency check was performed once
-        verify(idempotencyService, times(1)).processIfFirstTime(eventId);
+        verify(idempotencyService, times(1)).processIfFirstTime(ticketId);
         verify(idempotencyService, never()).undoProcessing(any());
     }
 
@@ -58,12 +58,11 @@ class TicketNotificationConsumerIntegrationTest {
     @DisplayName("Should skip processing (Idempotent) when same event ID is received twice")
     void shouldSkipProcessingWhenDuplicateMessageIsReceived() {
         // Arrange
-        String eventId = UUID.randomUUID().toString();
         String ticketId = UUID.randomUUID().toString();
-        String jsonMessage = createSampleKafkaMessage(eventId, ticketId, "OPEN");
+        String jsonMessage = createSampleKafkaMessage(ticketId, "OPEN");
 
         // First call allows, second call blocks (duplicate)
-        when(idempotencyService.processIfFirstTime(eventId))
+        when(idempotencyService.processIfFirstTime(ticketId))
                 .thenReturn(true)   // 1st attempt: First time
                 .thenReturn(false); // 2nd attempt: Already processed
 
@@ -75,24 +74,30 @@ class TicketNotificationConsumerIntegrationTest {
 
         // Assert
         // Idempotency check called twice in total
-        verify(idempotencyService, times(2)).processIfFirstTime(eventId);
-        
+        verify(idempotencyService, times(2)).processIfFirstTime(ticketId);
+
         // Ensure failure rollback was NEVER called since duplicate was ignored gracefully
-        verify(idempotencyService, never()).undoProcessing(eventId);
+        verify(idempotencyService, never()).undoProcessing(ticketId);
     }
 
-    private String createSampleKafkaMessage(String eventId, String ticketId, String status) {
+    /**
+     * Gerçek Debezium connector çıktısını simüle eder:
+     * - transforms.outbox.type=EventRouter + table.expand.json.payload=true
+     *   -> outbox payload kolonu JSON obje olarak açılır (id, description, ticketStatus ...)
+     * - transforms.outbox.table.fields.additional.placement=trace_id:envelope:traceId,span_id:envelope:spanId
+     *   -> traceId/spanId root seviyede envelope alanı olarak eklenir
+     * - transforms.flatten.type=Flatten$Value (delimiter=_)
+     *   -> nested "payload" objesi "payload_id", "payload_description", "payload_ticketStatus" olarak düzleşir
+     */
+    private String createSampleKafkaMessage(String ticketId, String status) {
         return """
             {
-              "payload": {
-                "after": {
-                  "id": "%s",
-                  "traceId": "463ac35c9f6413ad",
-                  "spanId": "463ac35c9f6413ad",
-                  "payload": "{\\"id\\":\\"%s\\",\\"description\\":\\"Test Ticket\\",\\"ticketStatus\\":\\"%s\\"}"
-                }
-              }
+              "payload_id": "%s",
+              "payload_description": "Test Ticket",
+              "payload_ticketStatus": "%s",
+              "traceId": "463ac35c9f6413ad",
+              "spanId": "463ac35c9f6413ad"
             }
-            """.formatted(eventId, ticketId, status);
+            """.formatted(ticketId, status);
     }
 }

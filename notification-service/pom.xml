@@ -22,6 +22,12 @@
         <java.version>21</java.version>
         <spring-cloud.version>2023.0.3</spring-cloud.version>
         <lombok.version>1.18.38</lombok.version>
+
+        <!-- Spring Boot 3.3.4'ün getirdiği Mockito/ByteBuddy, JDK 25'i (class file 69)
+             henüz desteklemiyor ("Java 25 is not supported by the current version of
+             Byte Buddy"). Bu yüzden ikisini de daha yeni sürümlere sabitliyoruz. -->
+        <mockito.version>5.15.2</mockito.version>
+        <byte-buddy.version>1.15.11</byte-buddy.version>
     </properties>
 
     <dependencies>
@@ -93,6 +99,31 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- spring-boot-starter-test içindeki mockito-core / mockito-junit-jupiter
+                 sürümlerini override et -->
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
+            </dependency>
+
+            <!-- Mockito'nun inline mock maker'ının kullandığı ByteBuddy sürümü -->
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy</artifactId>
+                <version>${byte-buddy.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy-agent</artifactId>
+                <version>${byte-buddy.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -125,6 +156,16 @@
                             <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Mockito/ByteBuddy güncellense bile, JDK 25 ile çalıştıran biri
+                         eski sürümü cache'den çekerse diye ek güvenlik önlemi -->
+                    <argLine>-Dnet.bytebuddy.experimental=true</argLine>
                 </configuration>
             </plugin>
 
