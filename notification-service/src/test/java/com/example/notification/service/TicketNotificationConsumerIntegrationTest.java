@@ -42,7 +42,7 @@ class TicketNotificationConsumerIntegrationTest {
         String ticketId = UUID.randomUUID().toString();
         String jsonMessage = createSampleKafkaMessage(ticketId, "OPEN");
 
-        // Servis kodu idempotency key olarak ticketId kullanıyor (payload_id fallback)
+ 
         when(idempotencyService.processIfFirstTime(ticketId)).thenReturn(true);
 
         // Act & Assert
@@ -80,15 +80,7 @@ class TicketNotificationConsumerIntegrationTest {
         verify(idempotencyService, never()).undoProcessing(ticketId);
     }
 
-    /**
-     * Gerçek Debezium connector çıktısını simüle eder:
-     * - transforms.outbox.type=EventRouter + table.expand.json.payload=true
-     *   -> outbox payload kolonu JSON obje olarak açılır (id, description, ticketStatus ...)
-     * - transforms.outbox.table.fields.additional.placement=trace_id:envelope:traceId,span_id:envelope:spanId
-     *   -> traceId/spanId root seviyede envelope alanı olarak eklenir
-     * - transforms.flatten.type=Flatten$Value (delimiter=_)
-     *   -> nested "payload" objesi "payload_id", "payload_description", "payload_ticketStatus" olarak düzleşir
-     */
+
     private String createSampleKafkaMessage(String ticketId, String status) {
         return """
             {
