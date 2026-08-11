@@ -9,7 +9,7 @@ data:
   SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: "30s"
 
   # Elasticsearch
-  SPRING_ELASTICSEARCH_URIS: "http://elasticsearch:9200"
+  SPRING_ELASTICSEARCH_URIS: "http://host.minikube.internal:9200"
 
   # JDBC Observation (Micrometer SQL Tracing)
   JDBC_DATASOURCE_PROXY_ENABLED: "true"

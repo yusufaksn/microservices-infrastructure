@@ -35,6 +35,7 @@ A sample microservices infrastructure built with Spring Boot and Spring Cloud, d
 - Automated Integration Testing: End-to-end verification for database operations and event workflows.
 - CQRS architecture with separated command and query services
 - PostgreSQL primary/read replica architecture
+- Elasticsearch-based ticket search
 
 ---
 
@@ -45,6 +46,7 @@ The project currently consists of:
 - API Gateway
 - Ticket Service (Command)
 - Ticket Service Query (Query)
+- Ticket Search Service (Search)
 - Notification Service
 - Kafka
 - Debezium
@@ -57,66 +59,10 @@ The project currently consists of:
 
 # Event Flow
 
-The Ticket Service writes to PostgreSQL Primary, while the Query Service reads from Read Replicas.
-
+The Ticket Service writes to PostgreSQL Primary.
 PostgreSQL changes are captured by Debezium and published to Kafka.
-
-```text
-┌──────────────────────┐
-│        Client        │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│     API Gateway      │
-└──────────┬───────────┘
-           │
-     ┌─────┴─────┐
-     │           │
-  Command       Query
-     │           │
-     ▼           ▼
-┌─────────────┐  ┌──────────────────┐
-│   Ticket    │  │  Ticket Query    │
-│   Service   │  │     Service      │
-│   (Write)   │  │     (Read)       │
-└──────┬──────┘  └────────┬─────────┘
-       │                  │
-       ▼                  ▼
-┌─────────────┐      ┌──────────────────┐
-│ PostgreSQL  │─────▶│ PostgreSQL       │
-│   Primary   │ WAL  │ Read Replica(s)  │
-└──────┬──────┘      └──────────────────┘
-       │
-       ▼
-┌─────────────┐
-│   Debezium  │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│    Kafka    │
-└──────┬──────┘
-       │
-       ▼
-┌──────────────────────┐
-│ Notification Service │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│       MongoDB        │
-│  Idempotency / Data  │
-└──────────────────────┘
-```
-
-The Ticket Service writes only to PostgreSQL.
-
-Debezium monitors PostgreSQL WAL (Write-Ahead Log), detects database changes, publishes them to Kafka, and Notification Service consumes these events.
-
-This approach removes direct Kafka dependencies from the Ticket Service while providing reliable event publishing through Change Data Capture (CDC).
-
-If the same event is received multiple times, the service detects the existing record and skips duplicate processing.
+The Elasticsearch Sink Connector consumes these events and indexes them into Elasticsearch.
+Notification Service consumes events from Kafka for notification processing.
 
 ---
 
@@ -253,33 +199,30 @@ To allow Debezium to capture UPDATE and DELETE operations correctly, configure R
 
 # Configure Debezium
 
-After PostgreSQL and Kafka are running, register the PostgreSQL connector.
+Connector files are located in the `connectors` directory.
 
-Example:
+Apply the connectors in this order:
 
-```http
-POST http://localhost:8083/connectors
+1. `ticket-outbox-connector.json`
+2. `ticket-elasticsearch-sink.json`
+
+**Windows:**
+
+```bash
+curl.exe -X POST http://localhost:8083/connectors -H "Content-Type: application/json" --data-binary "@connectors/ticket-outbox-connector.json"
+curl.exe -X POST http://localhost:8083/connectors -H "Content-Type: application/json" --data-binary "@connectors/ticket-elasticsearch-sink.json"
 ```
 
-Request body:
+**Ubuntu:**
 
-```json
-{
-  "name": "ticket-outbox-connector",
-  "config": {
-    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-    "tasks.max": "1",
-    "plugin.name": "pgoutput",
-    "database.hostname": "postgres_ticket",
-    "database.port": "5432",
-    "database.user": "user",
-    "database.password": "password",
-    "database.dbname": "ticketdb",
-    "topic.prefix": "postgres_ticket",
-    "table.include.list": "public.outbox_events",
-    "uuid.representation": "standard"
-  }
-}
+```bash
+curl -X POST http://localhost:8083/connectors \
+  -H "Content-Type: application/json" \
+  --data-binary @connectors/ticket-outbox-connector.json
+
+curl -X POST http://localhost:8083/connectors \
+  -H "Content-Type: application/json" \
+  --data-binary @connectors/ticket-elasticsearch-sink.json
 ```
 
 ---
