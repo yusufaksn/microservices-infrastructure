@@ -26,37 +26,25 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .authorizeExchange(exchanges -> exchanges
-                        // Public endpoint'ler
+                .authorizeExchange(exchanges -> exchanges  
                         .pathMatchers("/public/**").permitAll()
                         .pathMatchers("/fallback/**").permitAll()
-
-                        // Admin rolü kontrolü (Önemli: hasRole("admin") "ROLE_admin" kontrol eder)
                         .pathMatchers("/admin/**").hasRole("admin")
-
                         .pathMatchers("/actuator/**").permitAll()
                         .pathMatchers("/actuator/health/**").permitAll()
-
-                        // Diğer tüm istekler authenticated olmalı
                         .pathMatchers("/api/**").authenticated()
                         .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        // Yazdığımız reactive converter'ı buraya bağlıyoruz
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(grantedAuthoritiesExtractor())))
                 .build();
     }
 
-    /**
-     * Keycloak'un 'realm_access.roles' yapısını parse edip, Spring'in anlayacağı
-     * 'ROLE_' önekiyle asenkron akışa (Flux/Mono) çeviren converter.
-     */
     private Converter<Jwt, Mono<AbstractAuthenticationToken>> grantedAuthoritiesExtractor() {
         ReactiveJwtAuthenticationConverter jwtAuthenticationConverter = new ReactiveJwtAuthenticationConverter();
 
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(new Converter<Jwt, Flux<GrantedAuthority>>() {
             @Override
             public Flux<GrantedAuthority> convert(Jwt jwt) {
-                // Keycloak token yapısı: "realm_access": { "roles": ["admin", "user"] }
                 Map<String, Object> realmAccess = jwt.getClaim("realm_access");
 
                 if (realmAccess == null || !realmAccess.containsKey("roles")) {
@@ -64,9 +52,6 @@ public class SecurityConfig {
                 }
 
                 Collection<String> roles = (Collection<String>) realmAccess.get("roles");
-
-                // Rollerin başına "ROLE_" ekleyerek SimpleGrantedAuthority nesnesine
-                // çeviriyoruz
                 java.util.List<GrantedAuthority> authorities = roles.stream()
                         .map(roleName -> new SimpleGrantedAuthority("ROLE_" + roleName))
                         .collect(Collectors.toList());

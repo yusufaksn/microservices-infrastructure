@@ -19,7 +19,7 @@ spec:
             - "apigateway.test"
       containers:
         - name: ticket-query-service-container
-          image: ysfaksn/ticket-query-service:latest
+          image: ysfaksn/ticket-service-query:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8505

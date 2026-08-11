@@ -33,6 +33,8 @@ A sample microservices infrastructure built with Spring Boot and Spring Cloud, d
 - MongoDB integration for Notification Service
 - Idempotency control for duplicate event processing
 - Automated Integration Testing: End-to-end verification for database operations and event workflows.
+- CQRS architecture with separated command and query services
+- PostgreSQL primary/read replica architecture
 
 ---
 
@@ -41,47 +43,71 @@ A sample microservices infrastructure built with Spring Boot and Spring Cloud, d
 The project currently consists of:
 
 - API Gateway
-- Ticket Service
+- Ticket Service (Command)
+- Ticket Service Query (Query)
 - Notification Service
 - Kafka
 - Debezium
 - Keycloak
 - Zipkin
-- PostgreSQL
+- PostgreSQL Cluster
 - MongoDB
 
 ---
 
 # Event Flow
 
-The services communicate asynchronously using Kafka and Debezium.
+The Ticket Service writes to PostgreSQL Primary, while the Query Service reads from Read Replicas.
+
+PostgreSQL changes are captured by Debezium and published to Kafka.
 
 ```text
-Client
-   │
-   ▼
-API Gateway
-   │
-   ▼
-Ticket Service
-   │
-   │ Save Ticket
-   ▼
-PostgreSQL (ticketdb)
-   │
-   │ WAL
-   ▼
-Debezium
-   │
-   ▼
-Kafka
-   │
-   ▼
-Notification Service
-   │
-   │ Idempotency Check
-   ▼
-MongoDB
+┌──────────────────────┐
+│        Client        │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────┐
+│     API Gateway      │
+└──────────┬───────────┘
+           │
+     ┌─────┴─────┐
+     │           │
+  Command       Query
+     │           │
+     ▼           ▼
+┌─────────────┐  ┌──────────────────┐
+│   Ticket    │  │  Ticket Query    │
+│   Service   │  │     Service      │
+│   (Write)   │  │     (Read)       │
+└──────┬──────┘  └────────┬─────────┘
+       │                  │
+       ▼                  ▼
+┌─────────────┐      ┌──────────────────┐
+│ PostgreSQL  │─────▶│ PostgreSQL       │
+│   Primary   │ WAL  │ Read Replica(s)  │
+└──────┬──────┘      └──────────────────┘
+       │
+       ▼
+┌─────────────┐
+│   Debezium  │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│    Kafka    │
+└──────┬──────┘
+       │
+       ▼
+┌──────────────────────┐
+│ Notification Service │
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────┐
+│       MongoDB        │
+│  Idempotency / Data  │
+└──────────────────────┘
 ```
 
 The Ticket Service writes only to PostgreSQL.
@@ -173,7 +199,9 @@ docker compose up -d
 
 This starts:
 
-- PostgreSQL
+- PostgreSQL Primary
+- PostgreSQL Read Replica
+- MongoDB
 - Kafka
 - Debezium
 - Keycloak

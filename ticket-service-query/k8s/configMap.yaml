@@ -9,7 +9,7 @@ data:
   SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: "30s"
 
   # PostgreSQL JDBC driver configuration
-  SPRING_DATASOURCE_URL: "jdbc:postgresql://host.minikube.internal:5434/ticketdb"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://host.minikube.internal:5435/ticketdb"
   SPRING_DATASOURCE_USERNAME: "user"
   SPRING_DATASOURCE_PASSWORD: "password"
   SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
