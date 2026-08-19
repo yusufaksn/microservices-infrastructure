@@ -36,6 +36,8 @@ A sample microservices infrastructure built with Spring Boot and Spring Cloud, d
 - CQRS architecture with separated command and query services
 - PostgreSQL primary/read replica architecture
 - Elasticsearch-based ticket search
+- Redis caching for query operations
+- Cache-Aside pattern with TTL and LRU eviction
 
 ---
 
@@ -54,6 +56,7 @@ The project currently consists of:
 - Zipkin
 - PostgreSQL Cluster
 - MongoDB
+- Redis
 
 ---
 
@@ -147,11 +150,15 @@ This starts:
 
 - PostgreSQL Primary
 - PostgreSQL Read Replica
+- Redis
+- Elasticsearch
 - MongoDB
 - Kafka
 - Debezium
+- Kafka Connect
 - Keycloak
 - Zipkin
+- Kafdrop
 
 ---
 
