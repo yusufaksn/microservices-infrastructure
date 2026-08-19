@@ -14,6 +14,13 @@ data:
   SPRING_DATASOURCE_PASSWORD: "password"
   SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
 
+  # Redis Configuration
+  SPRING_DATA_REDIS_HOST: "host.minikube.internal"
+  SPRING_DATA_REDIS_PORT: "6379"
+  # SPRING_DATA_REDIS_PASSWORD: "redis_password" # Şifre varsa Secret kullanılması önerilir
+  SPRING_DATA_REDIS_TIMEOUT: "2000" # ms cinsinden bağlantı zaman aşımı
+  SPRING_CACHE_TYPE: "redis"
+
   # HikariCP connection pool
   SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: "5000"
   SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT: "3000"
