@@ -1,47 +1,39 @@
 package com.example.ticket_query_service.service;
 
-import com.example.ticket_query_service.dto.TicketDto;
-import com.example.ticket_query_service.model.PriorityType;
-import com.example.ticket_query_service.model.TicketStatus;
-import com.example.ticket_query_service.repository.TicketQueryRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import com.example.ticket_query_service.dto.PagedResult;
+import com.example.ticket_query_service.dto.TicketDto;
+import com.example.ticket_query_service.dto.TicketMapper;
+import com.example.ticket_query_service.repository.TicketQueryRepository;
 
-@Slf4j
+import lombok.RequiredArgsConstructor;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TicketQueryService {
 
     private final TicketQueryRepository ticketQueryRepository;
+    private final TicketMapper ticketMapper;
 
+    @Cacheable(value = "tickets", key = "'page:' + #page + ':size:' + #size")
+    public PagedResult<TicketDto> getAll(int page, int size) {
+        Page<TicketDto> result = ticketQueryRepository
+                .findAll(PageRequest.of(page, size))
+                .map(ticketMapper::toDto);
+        return PagedResult.from(result);
+    }
+
+    @Cacheable(value = "tickets", key = "'id:' + #id")
     public TicketDto getTicketById(String id) {
-        log.info("Fetching ticket details for id={}", id);
         return ticketQueryRepository.findDtoById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found with id: " + id));
     }
 
-    public List<TicketDto> getAllTickets() {
-        log.info("Fetching all tickets");
-        return ticketQueryRepository.findAllProjectedBy();
-    }
 
-    public List<TicketDto> getTicketsByAssignee(String assignee) {
-        log.info("Fetching tickets assigned to assignee={}", assignee);
-        return ticketQueryRepository.findAllByAssignee(assignee);
-    }
-
-    public List<TicketDto> getTicketsByStatus(TicketStatus status) {
-        log.info("Fetching tickets with status={}", status);
-        return ticketQueryRepository.findAllByTicketStatus(status);
-    }
-
-    public List<TicketDto> getTicketsByPriority(PriorityType priority) {
-        log.info("Fetching tickets with priority={}", priority);
-        return ticketQueryRepository.findAllByPriorityType(priority);
-    }
 }
