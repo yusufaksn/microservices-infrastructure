@@ -455,11 +455,13 @@ Docker Hub
 Kubernetes Deployment
 ```
 
-Docker images:
+### Docker Images
 
 - `ysfaksn/api-gateway`
 - `ysfaksn/ticket-service`
 - `ysfaksn/notification-service`
+- `ysfaksn/ticket-service-query`
+- `ysfaksn/ticket-service-search`
 
 Workflow file:
 
