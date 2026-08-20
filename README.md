@@ -8,7 +8,7 @@ A sample microservices infrastructure built with Spring Boot and Spring Cloud, d
 # Architecture
 
 <p align="center">
-  <img src="images/architecture-v2.png" alt="Microservices Architecture" width="100%">
+  <img src="images/architecture-v3.png" alt="Microservices Architecture" width="100%">
 </p>
 
 ---
