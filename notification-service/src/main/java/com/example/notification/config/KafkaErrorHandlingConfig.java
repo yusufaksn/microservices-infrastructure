@@ -13,6 +13,11 @@ public class KafkaErrorHandlingConfig {
     @Bean
     public DefaultErrorHandler errorHandler(KafkaTemplate<String, String> kafkaTemplate) {
         DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate);
-        return new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3));
+        DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3));
+
+        handler.addNotRetryableExceptions(
+                com.fasterxml.jackson.core.JsonProcessingException.class,
+                com.fasterxml.jackson.databind.exc.InvalidFormatException.class);
+        return handler;
     }
 }
