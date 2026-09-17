@@ -28,6 +28,23 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Detect changed folders/paths
+      - name: Check for changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            gateway:
+              - 'gateway/**'
+            ticket-service:
+              - 'ticket-service/**'
+            notification-service:
+              - 'notification-service/**'
+            ticket-service-query:
+              - 'ticket-service-query/**'
+            ticket-search-service:
+              - 'ticket-search-service/**'
+
       - name: Set up Java 21
         uses: actions/setup-java@v5
         with:
@@ -42,26 +59,30 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       # -----------------------------
-      # Gateway 
+      # Gateway Service
       # -----------------------------
       - name: Build & Package Gateway
+        if: steps.changes.outputs.gateway == 'true'
         working-directory: gateway
         run: |
           mvn clean package -DskipTests
           docker build -t ysfaksn/api-gateway:latest .
 
       - name: Push Gateway
+        if: steps.changes.outputs.gateway == 'true'
         run: docker push ysfaksn/api-gateway:latest
 
       # -----------------------------
       # Ticket Service
       # -----------------------------
       - name: Initialize test database schema
+        if: steps.changes.outputs.ticket-service == 'true'
         env:
           PGPASSWORD: test
         run: psql -h localhost -p 5432 -U test -d ticketdb -f ticket-service/db-init/schema.sql
 
       - name: Test, Build & Package Ticket Service
+        if: steps.changes.outputs.ticket-service == 'true'
         working-directory: ticket-service
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/ticketdb
@@ -72,44 +93,51 @@ jobs:
           docker build -t ysfaksn/ticket-service:latest .
 
       - name: Push Ticket Service
+        if: steps.changes.outputs.ticket-service == 'true'
         run: docker push ysfaksn/ticket-service:latest
 
       # -----------------------------
       # Notification Service
       # -----------------------------
       - name: Test, Build & Package Notification Service
+        if: steps.changes.outputs.notification-service == 'true'
         working-directory: notification-service
         run: |
           mvn clean package
           docker build -t ysfaksn/notification-service:latest .
 
       - name: Push Notification Service
+        if: steps.changes.outputs.notification-service == 'true'
         run: docker push ysfaksn/notification-service:latest
 
       # -----------------------------
       # Ticket Service Query
       # -----------------------------
       - name: Test, Build & Package Ticket Service Query
-        working-directory: ticket-service-query
+        if: steps.changes.outputs.ticket-service-query == 'true'
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/ticketdb
           SPRING_DATASOURCE_USERNAME: test
           SPRING_DATASOURCE_PASSWORD: test
+        working-directory: ticket-service-query
         run: |
           mvn clean package
           docker build -t ysfaksn/ticket-service-query:latest .
 
       - name: Push Ticket Service Query
+        if: steps.changes.outputs.ticket-service-query == 'true'
         run: docker push ysfaksn/ticket-service-query:latest
 
       # -----------------------------
       # Ticket Search Service
       # -----------------------------
       - name: Build & Package Ticket Search Service
+        if: steps.changes.outputs.ticket-search-service == 'true'
         working-directory: ticket-search-service
         run: |
           mvn clean package -DskipTests
           docker build -t ysfaksn/ticket-service-search:latest .
 
       - name: Push Ticket Search Service
-        run: docker push ysfaksn/ticket-service-search:latest
+        if: steps.changes.outputs.ticket-search-service == 'true'
+        run: docker push ysfaksn/ticket-search-service:latest
