@@ -45,9 +45,9 @@ public class RedisService {
                     .map(ticket -> String.valueOf(ticket.id()))
                     .collect(Collectors.joining(","));
 
-            List<String> args = new ArrayList<>();
+            List<Object> args = new ArrayList<>();
             args.add(String.valueOf(TTL_SECONDS)); 
-            args.add(idsCsv);                     
+            args.add(idsCsv); 
 
             for (TicketDto ticket : tickets) {
                 args.add(TICKET_PREFIX + ticket.id());
@@ -56,8 +56,8 @@ public class RedisService {
 
             redisTemplate.execute(
                     cacheTicketsPageScript,
-                    Collections.singletonList(pageKey),     
-                    args.toArray(new String[0])              
+                    Collections.singletonList(pageKey), 
+                    args.toArray(new Object[0])
             );
 
             log.debug("Successfully cached page {} with size {}", page, size);
@@ -77,7 +77,7 @@ public class RedisService {
             List<String> rawJsonList = redisTemplate.execute(
                     getTicketsPageScript,
                     Collections.singletonList(pageKey), 
-                    TICKET_PREFIX                      
+                    new Object[]{ TICKET_PREFIX }
             );
 
             if (rawJsonList == null || rawJsonList.isEmpty()) {
