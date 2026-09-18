@@ -29,7 +29,6 @@ A sample microservices infrastructure built with Spring Boot and Spring Cloud, d
 - ConfigMaps and Secrets for externalized configuration
 - Docker containerization
 - CI/CD pipeline with GitHub Actions
-- Automated Docker image build and push to Docker Hub
 - MongoDB integration for Notification Service
 - Idempotency control for duplicate event processing
 - Automated Integration Testing: End-to-end verification for database operations and event workflows.
@@ -38,6 +37,8 @@ A sample microservices infrastructure built with Spring Boot and Spring Cloud, d
 - Elasticsearch-based ticket search
 - Redis caching for query operations
 - Cache-Aside pattern with TTL and LRU eviction
+- GitOps-based continuous deployment with Argo CD
+- Automated Kubernetes deployments from Git
 
 ---
 
@@ -57,6 +58,8 @@ The project currently consists of:
 - PostgreSQL Cluster
 - MongoDB
 - Redis
+- Kubernetes
+- Argo CD
 
 ---
 
@@ -134,6 +137,28 @@ Delete:
 
 ```bash
 minikube delete
+```
+
+## Install Argo CD
+
+Argo CD is used for GitOps-based continuous deployment on the Kubernetes cluster.
+
+Create the Argo CD namespace:
+
+```bash
+kubectl create namespace argocd
+```
+
+Install Argo CD:
+
+```bash
+kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+Verify the Argo CD Application CRD:
+
+```bash
+kubectl get crd applications.argoproj.io
 ```
 
 ---
