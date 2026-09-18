@@ -5,9 +5,15 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+
+    env:
+      IMAGE_TAG: ${{ github.sha }}
 
     services:
       postgres:
@@ -66,11 +72,11 @@ jobs:
         working-directory: gateway
         run: |
           mvn clean package -DskipTests
-          docker build -t ysfaksn/api-gateway:latest .
+          docker build -t ysfaksn/api-gateway:${IMAGE_TAG} .
 
       - name: Push Gateway
         if: steps.changes.outputs.gateway == 'true'
-        run: docker push ysfaksn/api-gateway:latest
+        run: docker push ysfaksn/api-gateway:${IMAGE_TAG}
 
       # -----------------------------
       # Ticket Service
@@ -90,11 +96,11 @@ jobs:
           SPRING_DATASOURCE_PASSWORD: test
         run: |
           mvn clean package
-          docker build -t ysfaksn/ticket-service:latest .
+          docker build -t ysfaksn/ticket-service:${IMAGE_TAG} .
 
       - name: Push Ticket Service
         if: steps.changes.outputs.ticket-service == 'true'
-        run: docker push ysfaksn/ticket-service:latest
+        run: docker push ysfaksn/ticket-service:${IMAGE_TAG}
 
       # -----------------------------
       # Notification Service
@@ -104,11 +110,11 @@ jobs:
         working-directory: notification-service
         run: |
           mvn clean package
-          docker build -t ysfaksn/notification-service:latest .
+          docker build -t ysfaksn/notification-service:${IMAGE_TAG} .
 
       - name: Push Notification Service
         if: steps.changes.outputs.notification-service == 'true'
-        run: docker push ysfaksn/notification-service:latest
+        run: docker push ysfaksn/notification-service:${IMAGE_TAG}
 
       # -----------------------------
       # Ticket Service Query
@@ -122,11 +128,11 @@ jobs:
         working-directory: ticket-service-query
         run: |
           mvn clean package
-          docker build -t ysfaksn/ticket-service-query:latest .
+          docker build -t ysfaksn/ticket-service-query:${IMAGE_TAG} .
 
       - name: Push Ticket Service Query
         if: steps.changes.outputs.ticket-service-query == 'true'
-        run: docker push ysfaksn/ticket-service-query:latest
+        run: docker push ysfaksn/ticket-service-query:${IMAGE_TAG}
 
       # -----------------------------
       # Ticket Search Service
@@ -136,8 +142,65 @@ jobs:
         working-directory: ticket-search-service
         run: |
           mvn clean package -DskipTests
-          docker build -t ysfaksn/ticket-service-search:latest .
+          docker build -t ysfaksn/ticket-service-search:${IMAGE_TAG} .
 
       - name: Push Ticket Search Service
         if: steps.changes.outputs.ticket-search-service == 'true'
-        run: docker push ysfaksn/ticket-search-service:latest
+        run: docker push ysfaksn/ticket-service-search:${IMAGE_TAG}
+
+      # -----------------------------
+      # Update Kubernetes image tags
+      # -----------------------------
+      - name: Update Kubernetes image tags
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -e
+
+          if [[ "${{ steps.changes.outputs.gateway }}" == "true" ]]; then
+            sed -i "s|image: ysfaksn/api-gateway:.*|image: ysfaksn/api-gateway:${IMAGE_TAG}|" \
+              gateway/k8s/deployment.yaml
+          fi
+
+          if [[ "${{ steps.changes.outputs.ticket-service }}" == "true" ]]; then
+            sed -i "s|image: ysfaksn/ticket-service:.*|image: ysfaksn/ticket-service:${IMAGE_TAG}|" \
+              ticket-service/k8s/deployment.yaml
+          fi
+
+          if [[ "${{ steps.changes.outputs.notification-service }}" == "true" ]]; then
+            sed -i "s|image: ysfaksn/notification-service:.*|image: ysfaksn/notification-service:${IMAGE_TAG}|" \
+              notification-service/k8s/deployment.yaml
+          fi
+
+          if [[ "${{ steps.changes.outputs.ticket-service-query }}" == "true" ]]; then
+            sed -i "s|image: ysfaksn/ticket-service-query:.*|image: ysfaksn/ticket-service-query:${IMAGE_TAG}|" \
+              ticket-service-query/k8s/deployment.yaml
+          fi
+
+          if [[ "${{ steps.changes.outputs.ticket-search-service }}" == "true" ]]; then
+            sed -i "s|image: ysfaksn/ticket-service-search:.*|image: ysfaksn/ticket-service-search:${IMAGE_TAG}|" \
+              ticket-search-service/k8s/deployment.yaml
+          fi
+
+      # -----------------------------
+      # Commit Kubernetes changes
+      # -----------------------------
+      - name: Commit and push Kubernetes changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add \
+            gateway/k8s/deployment.yaml \
+            ticket-service/k8s/deployment.yaml \
+            notification-service/k8s/deployment.yaml \
+            ticket-service-query/k8s/deployment.yaml \
+            ticket-search-service/k8s/deployment.yaml
+
+          if git diff --cached --quiet; then
+            echo "No Kubernetes image changes to commit."
+            exit 0
+          fi
+
+          git commit -m "chore: update image tags [skip ci]"
+          git push origin main
