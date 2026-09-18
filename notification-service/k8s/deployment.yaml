@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: notification-service-container
-          image: ysfaksn/notification-service:latest
+          image: ysfaksn/notification-service:a6b2e7d3daa261c857d820eec35f956ddea7ce5b
           imagePullPolicy: Always
           ports:
             - containerPort: 8503
