@@ -453,39 +453,56 @@ mvn clean package
 
 # CI/CD Pipeline
 
-The project uses GitHub Actions for automated Docker image build and push.
+The project uses GitHub Actions, Docker Hub, and ArgoCD for automated CI/CD.
 
 On every push to the main branch:
 
 1. GitHub Actions workflow is triggered.
-2. Docker images are built for each microservice.
-3. Images are pushed to Docker Hub.
-4. Kubernetes deployments can pull the updated images.
+
+2. Changed microservices are detected.
+
+3. Docker images are built and tagged with the Git commit SHA.
+
+4. Images are pushed to Docker Hub.
+
+5. Kubernetes deployment manifests are updated with the new image tags.
+
+6. ArgoCD detects the changes and synchronizes the Kubernetes deployments.
 
 Pipeline flow:
 
 ```text
 GitHub Repository
-        │
-        ▼
+│
+▼
 GitHub Actions
-        │
-        ▼
+│
+▼
 Docker Build
-        │
-        ▼
+│
+▼
 Docker Hub
-        │
-        ▼
+│
+▼
+Kubernetes Manifests
+│
+▼
+ArgoCD
+│
+▼
 Kubernetes Deployment
 ```
 
-### Docker Images
+**### Docker Images**
 
 - `ysfaksn/api-gateway`
+
 - `ysfaksn/ticket-service`
+
 - `ysfaksn/notification-service`
+
 - `ysfaksn/ticket-service-query`
+
 - `ysfaksn/ticket-service-search`
 
 Workflow file:
